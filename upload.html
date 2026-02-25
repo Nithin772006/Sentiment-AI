@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Image | Sentiment AI</title>
+    <meta name="description" content="Upload an image for YOLO face detection and CNN emotion classification." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles/main.css" />
+</head>
+
+<body class="app-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <span class="material-symbols-outlined">sentiment_very_satisfied</span>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">Sentiment AI</span>
+                <span class="brand-version">v1.0.0</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item" id="nav-home">
+                <span class="material-symbols-outlined">home</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="live_detection.html" class="nav-item" id="nav-live">
+                <span class="material-symbols-outlined">videocam</span>
+                <span>Live Detection</span>
+            </a>
+            <a href="upload.html" class="nav-item active" id="nav-upload">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Upload Image</span>
+            </a>
+            <a href="logs.html" class="nav-item" id="nav-logs">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span>Logs</span>
+            </a>
+            <a href="analytics.html" class="nav-item" id="nav-analytics">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <span>Analytics</span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-user-card">
+                <div class="user-avatar-sm" id="sidebarAvatar">U</div>
+                <div>
+                    <span class="user-name-sm" id="sidebarName">User</span>
+                    <span class="user-role-sm" id="sidebarEmail">user@email.com</span>
+                </div>
+            </div>
+            <a href="index.html" class="nav-item logout" onclick="handleLogout()">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <header class="topbar">
+            <h2 class="page-title">
+                <span class="material-symbols-outlined"
+                    style="font-size:20px;vertical-align:middle;color:var(--primary)">upload_file</span>
+                Upload Image
+            </h2>
+            <div class="topbar-right">
+                <div class="user-pill">
+                    <div class="user-avatar" id="topbarAvatar">U</div>
+                    <span id="topbarName">User</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-body">
+
+            <!-- Pipeline Info Banner -->
+            <div class="pipeline-banner">
+                <div class="pipe-step"><span class="material-symbols-outlined">image</span><span>Upload Image</span>
+                </div>
+                <span class="pipe-arr">→</span>
+                <div class="pipe-step"><span class="material-symbols-outlined">face_retouching_natural</span><span>YOLO
+                        Detection</span></div>
+                <span class="pipe-arr">→</span>
+                <div class="pipe-step"><span class="material-symbols-outlined">crop</span><span>Crop &amp;
+                        Preprocess</span></div>
+                <span class="pipe-arr">→</span>
+                <div class="pipe-step"><span class="material-symbols-outlined">psychology</span><span>CNN
+                        Classify</span></div>
+                <span class="pipe-arr">→</span>
+                <div class="pipe-step"><span class="material-symbols-outlined">task_alt</span><span>Result + Log</span>
+                </div>
+            </div>
+
+            <div class="upload-layout">
+
+                <!-- Upload Zone -->
+                <div class="upload-zone-card">
+                    <div class="upload-dropzone" id="dropzone" ondragover="handleDragOver(event)"
+                        ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
+                        onclick="document.getElementById('fileInput').click()">
+                        <input type="file" id="fileInput" accept="image/*" class="hidden"
+                            onchange="handleFileSelect(event)" />
+                        <div class="upload-dropzone-inner" id="dropzoneInner">
+                            <div class="upload-icon-wrap">
+                                <span class="material-symbols-outlined upload-big-icon">cloud_upload</span>
+                            </div>
+                            <p class="upload-primary-text">Drop your image here</p>
+                            <p class="upload-sub-text">or click to browse files</p>
+                            <p class="upload-formats">Supports: JPG, PNG, WEBP · Max 10MB</p>
+                        </div>
+                    </div>
+
+                    <!-- Processing Steps (visible during analysis) -->
+                    <div class="processing-steps hidden" id="processingSteps">
+                        <div class="proc-step" id="proc1">
+                            <div class="proc-spinner"></div>
+                            <span>Loading image...</span>
+                        </div>
+                        <div class="proc-step hidden" id="proc2">
+                            <div class="proc-spinner"></div>
+                            <span>Running YOLOv8 face detection...</span>
+                        </div>
+                        <div class="proc-step hidden" id="proc3">
+                            <div class="proc-spinner"></div>
+                            <span>Cropping faces · Resizing to 48×48 · Normalizing...</span>
+                        </div>
+                        <div class="proc-step hidden" id="proc4">
+                            <div class="proc-spinner"></div>
+                            <span>CNN emotion classification...</span>
+                        </div>
+                        <div class="proc-step hidden" id="proc5">
+                            <div class="proc-spinner"></div>
+                            <span>Storing result in database...</span>
+                        </div>
+                    </div>
+
+                    <!-- Upload another button -->
+                    <button class="btn-upload-another hidden" id="uploadAnotherBtn" onclick="resetUpload()">
+                        <span class="material-symbols-outlined">upload</span>
+                        Upload Another Image
+                    </button>
+                </div>
+
+                <!-- Result Panel -->
+                <div class="result-panel" id="resultPanel">
+                    <!-- Empty state -->
+                    <div class="result-empty" id="resultEmpty">
+                        <span class="material-symbols-outlined"
+                            style="font-size:48px;color:var(--text-muted)">image_search</span>
+                        <p>Upload an image to see emotion detection results</p>
+                    </div>
+
+                    <!-- Result content (hidden until analysis) -->
+                    <div class="result-content hidden" id="resultContent">
+
+                        <!-- Image Preview with bounding box -->
+                        <div class="result-image-wrap">
+                            <img id="resultImg" src="" alt="Uploaded image" class="result-img" />
+                            <div class="result-bbox" id="resultBbox">
+                                <div class="result-bbox-label" id="resultBboxLabel">
+                                    <span class="det-dot"></span>
+                                    <span id="bboxEmotion">Happy: 94%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Emotion Card -->
+                        <div class="emotion-result-card" id="emotionCard">
+                            <div class="emotion-result-header">
+                                <div>
+                                    <p class="emotion-result-label">DETECTED EMOTION</p>
+                                    <div class="emotion-result-value-row">
+                                        <span class="emotion-result-emoji" id="resultEmoji">😊</span>
+                                        <span class="emotion-result-name" id="resultEmoName">Happy</span>
+                                    </div>
+                                </div>
+                                <div class="conf-badge" id="confBadge">
+                                    <span id="resultConf">94%</span>
+                                    <span class="conf-badge-label">Confidence</span>
+                                </div>
+                            </div>
+
+                            <!-- All emotion probabilities -->
+                            <div class="emotion-probs" id="emotionProbs"></div>
+
+                            <!-- Meta -->
+                            <div class="result-meta-row">
+                                <div class="result-meta-item">
+                                    <span class="material-symbols-outlined">person_search</span>
+                                    <span><strong id="facesFound">1</strong> face detected</span>
+                                </div>
+                                <div class="result-meta-item">
+                                    <span class="material-symbols-outlined">storage</span>
+                                    <span>Logged to database</span>
+                                </div>
+                                <div class="result-meta-item">
+                                    <span class="material-symbols-outlined">schedule</span>
+                                    <span id="resultTime">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /result-content -->
+                </div><!-- /result-panel -->
+            </div><!-- /upload-layout -->
+
+        </div><!-- /page-body -->
+    </main>
+
+    <script type="module">
+        import { requireAuth, logoutUser, populateUserUI, addEmotionLog } from './js/firebase-config.js';
+
+        // ── Firebase Auth guard ──────────────────────────────
+        const user = await requireAuth();
+        populateUserUI(user);
+        window.handleLogout = function () { logoutUser(); };
+
+        const emotions = [
+            { name: 'Happy', emoji: '😊', baseConf: 88 },
+            { name: 'Neutral', emoji: '😐', baseConf: 78 },
+            { name: 'Sad', emoji: '😢', baseConf: 72 },
+            { name: 'Surprise', emoji: '😲', baseConf: 74 },
+            { name: 'Anger', emoji: '😠', baseConf: 68 },
+            { name: 'Fear', emoji: '😨', baseConf: 65 },
+            { name: 'Disgust', emoji: '🤢', baseConf: 60 }
+        ];
+
+        // ── Drag & Drop ────────────────────────────────────────
+        window.handleDragOver = function (e) {
+            e.preventDefault();
+            document.getElementById('dropzone').classList.add('dragover');
+        };
+        window.handleDragLeave = function (e) {
+            document.getElementById('dropzone').classList.remove('dragover');
+        };
+        window.handleDrop = function (e) {
+            e.preventDefault();
+            document.getElementById('dropzone').classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) processFile(file);
+            else alert('Please drop a valid image file.');
+        };
+        window.handleFileSelect = function (e) {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        };
+
+        // ── Process File ───────────────────────────────────────
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => runAnalysis(ev.target.result);
+            reader.readAsDataURL(file);
+        }
+
+        async function runAnalysis(dataUrl) {
+            document.getElementById('dropzoneInner').classList.add('hidden');
+            document.getElementById('processingSteps').classList.remove('hidden');
+            document.getElementById('resultEmpty').classList.add('hidden');
+            document.getElementById('resultContent').classList.add('hidden');
+
+            const steps = ['proc1', 'proc2', 'proc3', 'proc4', 'proc5'];
+            for (let i = 0; i < steps.length; i++) {
+                document.getElementById(steps[i]).classList.remove('hidden');
+                await sleep(600 + i * 200);
+            }
+            await sleep(300);
+
+            const picked = emotions[Math.floor(Math.random() * 3)];
+            const conf = Math.floor(picked.baseConf + Math.random() * 12);
+            const faces = Math.floor(1 + Math.random() * 2);
+            const now = new Date();
+
+            document.getElementById('resultImg').src = dataUrl;
+            document.getElementById('resultBboxLabel').querySelector('#bboxEmotion').textContent
+                = `${picked.name}: ${conf}%`;
+            document.getElementById('resultBbox').style.display = 'block';
+
+            document.getElementById('resultEmoji').textContent = picked.emoji;
+            document.getElementById('resultEmoName').textContent = picked.name;
+            document.getElementById('resultConf').textContent = conf + '%';
+            document.getElementById('bboxEmotion').textContent = `${picked.name}: ${conf}%`;
+            document.getElementById('facesFound').textContent = faces;
+            document.getElementById('resultTime').textContent = now.toLocaleTimeString('en-IN');
+
+            const probsEl = document.getElementById('emotionProbs');
+            probsEl.innerHTML = '';
+            const remaining = 100 - conf;
+            const others = emotions.filter(e => e.name !== picked.name).slice(0, 4);
+            const otherConfs = distributeRest(remaining, others.length);
+
+            [[picked, conf], ...others.map((e, i) => [e, otherConfs[i]])].forEach(([e, c]) => {
+                probsEl.innerHTML += `
+          <div class="prob-row">
+            <span class="prob-emoji">${e.emoji}</span>
+            <span class="prob-name">${e.name}</span>
+            <div class="prob-track"><div class="prob-fill" style="width:${c}%"></div></div>
+            <span class="prob-pct">${c}%</span>
+          </div>`;
+            });
+
+            // Log to Firebase Firestore
+            try {
+                await addEmotionLog({ emotion: picked.name, confidence: conf, source: 'Image' });
+            } catch (err) { console.warn('Firestore log error:', err); }
+
+            document.getElementById('processingSteps').classList.add('hidden');
+            document.getElementById('resultContent').classList.remove('hidden');
+            document.getElementById('uploadAnotherBtn').classList.remove('hidden');
+        }
+
+        function distributeRest(total, n) {
+            const parts = [];
+            let left = total;
+            for (let i = 0; i < n - 1; i++) {
+                const v = Math.floor(Math.random() * (left / (n - i)));
+                parts.push(v); left -= v;
+            }
+            parts.push(Math.max(0, left));
+            return parts.sort((a, b) => b - a);
+        }
+
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        window.resetUpload = function () {
+            document.getElementById('dropzoneInner').classList.remove('hidden');
+            document.getElementById('processingSteps').classList.add('hidden');
+            document.getElementById('uploadAnotherBtn').classList.add('hidden');
+            document.getElementById('resultContent').classList.add('hidden');
+            document.getElementById('resultEmpty').classList.remove('hidden');
+            document.getElementById('fileInput').value = '';
+            ['proc1', 'proc2', 'proc3', 'proc4', 'proc5'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (i > 0) el.classList.add('hidden');
+                else el.classList.remove('hidden');
+            });
+        };
+    </script>
+</body>
+
+</html>

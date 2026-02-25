@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Detection | Sentiment AI</title>
+    <meta name="description"
+        content="Real-time facial emotion detection using YOLOv8 face detection and CNN classifier." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles/main.css" />
+</head>
+
+<body class="app-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <span class="material-symbols-outlined">sentiment_very_satisfied</span>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">Sentiment AI</span>
+                <span class="brand-version">v1.0.0</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item" id="nav-home">
+                <span class="material-symbols-outlined">home</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="live_detection.html" class="nav-item active" id="nav-live">
+                <span class="material-symbols-outlined">videocam</span>
+                <span>Live Detection</span>
+            </a>
+            <a href="upload.html" class="nav-item" id="nav-upload">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Upload Image</span>
+            </a>
+            <a href="logs.html" class="nav-item" id="nav-logs">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span>Logs</span>
+            </a>
+            <a href="analytics.html" class="nav-item" id="nav-analytics">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <span>Analytics</span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-user-card">
+                <div class="user-avatar-sm" id="sidebarAvatar">U</div>
+                <div>
+                    <span class="user-name-sm" id="sidebarName">User</span>
+                    <span class="user-role-sm" id="sidebarEmail">user@email.com</span>
+                </div>
+            </div>
+            <a href="index.html" class="nav-item logout" onclick="handleLogout()">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content" style="overflow:hidden">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h2 class="page-title">
+                <span class="material-symbols-outlined"
+                    style="font-size:20px;vertical-align:middle;color:var(--primary)">videocam</span>
+                Live Detection
+            </h2>
+            <div class="topbar-right">
+                <div class="live-status-pill" id="liveStatusPill">
+                    <span class="live-dot" id="livePillDot"></span>
+                    <span id="liveStatusText">Camera Off</span>
+                </div>
+                <div class="user-pill">
+                    <div class="user-avatar" id="topbarAvatar">U</div>
+                    <span id="topbarName">User</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Detection Layout -->
+        <div class="detection-layout">
+
+            <!-- Camera Feed Section -->
+            <div class="camera-section">
+                <div class="camera-feed" id="cameraFeed">
+
+                    <!-- Top overlay: LIVE badge + meta -->
+                    <div class="camera-overlay-top">
+                        <span class="live-badge" id="liveBadge">
+                            <span class="live-dot" id="liveDot"></span>
+                            LIVE STREAM
+                        </span>
+                        <div class="camera-meta">
+                            <span id="resolution">Webcam</span>
+                            <span class="cam-sep">|</span>
+                            <span>YOLOv8</span>
+                            <span class="cam-sep">|</span>
+                            <span>CNN</span>
+                        </div>
+                    </div>
+
+                    <!-- FPS badge -->
+                    <div class="fps-badge">
+                        FPS: <span id="fpsVal">—</span>
+                    </div>
+
+                    <!-- Placeholder / Video -->
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <div class="cam-icon-container">
+                            <span class="material-symbols-outlined cam-icon">videocam_off</span>
+                            <p>Press START to activate camera</p>
+                            <p style="font-size:12px;opacity:0.45;margin-top:6px">YOLOv8 will detect faces · CNN will
+                                classify emotions</p>
+                        </div>
+                    </div>
+                    <video id="videoElement" class="hidden" autoplay playsinline muted></video>
+                    <canvas id="overlayCanvas" class="hidden"></canvas>
+
+                    <!-- Detection bounding box overlay (simulated) -->
+                    <div class="detection-overlay hidden" id="detectionOverlay">
+                        <div class="detection-box" id="detectionBox">
+                            <div class="detection-label" id="detectionLabel">
+                                <span class="det-dot"></span>
+                                <span id="detEmotionText">Happy: 95%</span>
+                            </div>
+                            <div class="detection-id">FACE_0001</div>
+                        </div>
+                        <div class="corner-tl"></div>
+                        <div class="corner-tr"></div>
+                        <div class="corner-bl"></div>
+                        <div class="corner-br"></div>
+                    </div>
+
+                    <!-- Camera Controls -->
+                    <div class="camera-controls">
+                        <button class="cam-ctrl-btn" id="camToggleBtn" onclick="toggleCamera()" title="Toggle Camera">
+                            <span class="material-symbols-outlined" id="camIcon">videocam_off</span>
+                        </button>
+                        <button class="cam-ctrl-btn" id="screenshotBtn" onclick="takeScreenshot()" title="Screenshot"
+                            disabled>
+                            <span class="material-symbols-outlined">photo_camera</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Camera footer -->
+                <div class="camera-footer">
+                    <a href="dashboard.html" class="back-to-dash">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                        Back to Dashboard
+                    </a>
+                    <div class="confidence-threshold">
+                        <span>CONFIDENCE THRESHOLD</span>
+                        <input type="range" min="50" max="100" value="80" id="confSlider"
+                            oninput="updateThreshold(this.value)" />
+                        <span class="threshold-val" id="thresholdVal">80%</span>
+                    </div>
+                    <div class="system-status-badge">
+                        <span>SYSTEM</span>
+                        <span class="sys-status-text" id="sysStatusText">
+                            <span class="status-dot green"></span>
+                            Optimal
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="live-panel">
+
+                <!-- Session Stats -->
+                <div class="panel-section">
+                    <h3 class="panel-section-title">
+                        <span class="material-symbols-outlined">bar_chart</span>
+                        SESSION STATS
+                    </h3>
+                    <div class="session-stats" id="sessionStats">
+                        <div class="session-stat">
+                            <div class="ss-header"><span class="ss-label">Happy 😊</span><span class="ss-pct"
+                                    id="happyPct">0%</span></div>
+                            <div class="ss-bar-track">
+                                <div class="ss-bar-fill blue" id="happyBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="session-stat">
+                            <div class="ss-header"><span class="ss-label">Neutral 😐</span><span class="ss-pct"
+                                    id="neutralPct">0%</span></div>
+                            <div class="ss-bar-track">
+                                <div class="ss-bar-fill blue" id="neutralBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="session-stat">
+                            <div class="ss-header"><span class="ss-label">Sad 😢</span><span class="ss-pct"
+                                    id="sadPct">0%</span></div>
+                            <div class="ss-bar-track">
+                                <div class="ss-bar-fill blue" id="sadBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="session-stat">
+                            <div class="ss-header"><span class="ss-label">Surprise 😲</span><span class="ss-pct"
+                                    id="surprisePct">0%</span></div>
+                            <div class="ss-bar-track">
+                                <div class="ss-bar-fill blue" id="surpriseBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="session-stat">
+                            <div class="ss-header"><span class="ss-label">Anger 😠</span><span class="ss-pct"
+                                    id="angerPct">0%</span></div>
+                            <div class="ss-bar-track">
+                                <div class="ss-bar-fill blue" id="angerBar" style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-divider"></div>
+
+                <!-- Detection Controls -->
+                <div class="panel-section">
+                    <h3 class="panel-section-title">
+                        <span class="material-symbols-outlined">tune</span>
+                        DETECTION CONTROLS
+                    </h3>
+                    <div class="control-row">
+                        <span>Multi-face Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="multiFace" checked />
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+                    <div class="control-row">
+                        <span>Enable Logging</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="loggingToggle" checked />
+                            <span class="toggle-track"></span>
+                        </label>
+                    </div>
+
+                    <div class="start-stop-btns">
+                        <button class="btn-start" id="startBtn" onclick="startDetection()">
+                            <span class="material-symbols-outlined"
+                                style="font-size:16px;vertical-align:middle">play_arrow</span>
+                            START
+                        </button>
+                        <button class="btn-stop" id="stopBtn" onclick="stopDetection()">
+                            <span class="material-symbols-outlined"
+                                style="font-size:16px;vertical-align:middle">stop</span>
+                            STOP
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-divider"></div>
+
+                <!-- Recent Detections -->
+                <div class="panel-section">
+                    <h3 class="panel-section-title">
+                        <span class="material-symbols-outlined">history</span>
+                        RECENT DETECTIONS
+                    </h3>
+                    <div class="recent-list" id="recentList">
+                        <p style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">
+                            Start detection to see results
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Pipeline Info -->
+                <div class="panel-divider"></div>
+                <div class="panel-section">
+                    <h3 class="panel-section-title">
+                        <span class="material-symbols-outlined">account_tree</span>
+                        DETECTION PIPELINE
+                    </h3>
+                    <div class="pipeline-steps">
+                        <div class="pipeline-step" id="step1">
+                            <span class="pipeline-num">1</span>
+                            <span class="pipeline-label">Frame Capture</span>
+                        </div>
+                        <div class="pipeline-step" id="step2">
+                            <span class="pipeline-num">2</span>
+                            <span class="pipeline-label">YOLO Face Detection</span>
+                        </div>
+                        <div class="pipeline-step" id="step3">
+                            <span class="pipeline-num">3</span>
+                            <span class="pipeline-label">Crop &amp; Preprocess (48×48)</span>
+                        </div>
+                        <div class="pipeline-step" id="step4">
+                            <span class="pipeline-num">4</span>
+                            <span class="pipeline-label">CNN Classification</span>
+                        </div>
+                        <div class="pipeline-step" id="step5">
+                            <span class="pipeline-num">5</span>
+                            <span class="pipeline-label">Result &amp; Log</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /live-panel -->
+        </div><!-- /detection-layout -->
+    </main>
+
+    <script type="module">
+        import { requireAuth, logoutUser, populateUserUI, addEmotionLog } from './js/firebase-config.js';
+
+        // ── Firebase Auth guard ──────────────────────────────
+        const user = await requireAuth();
+        populateUserUI(user);
+        window.handleLogout = function () { logoutUser(); };
+
+        // ── State ─────────────────────────────────────────────
+        let isStreaming = false;
+        let videoStream = null;
+        let detectionInterval = null;
+        let fpsInterval = null;
+
+        const emotions = [
+            { name: 'Happy', emoji: '😊', conf: [88, 99], color: 'happy' },
+            { name: 'Neutral', emoji: '😐', conf: [75, 92], color: 'neutral' },
+            { name: 'Sad', emoji: '😢', conf: [65, 88], color: 'neutral' },
+            { name: 'Surprise', emoji: '😲', conf: [70, 90], color: 'surprise' },
+            { name: 'Anger', emoji: '😠', conf: [60, 85], color: 'neutral' }
+        ];
+
+        const emotionTotals = { Happy: 0, Neutral: 0, Sad: 0, Surprise: 0, Anger: 0 };
+        let totalCount = 0;
+
+        // ── Toggle Camera ─────────────────────────────────────
+        window.toggleCamera = async function () {
+            if (isStreaming) { stopDetection(); return; }
+            const video = document.getElementById('videoElement');
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = videoStream;
+                video.classList.remove('hidden');
+                document.getElementById('cameraPlaceholder').classList.add('hidden');
+                document.getElementById('detectionOverlay').classList.remove('hidden');
+                document.getElementById('camIcon').textContent = 'videocam';
+                document.getElementById('camToggleBtn').style.background = 'rgba(239,68,68,0.7)';
+                document.getElementById('liveBadge').classList.add('pulsing');
+                document.getElementById('screenshotBtn').disabled = false;
+                document.getElementById('liveStatusPill').classList.add('active');
+                document.getElementById('liveStatusText').textContent = 'Streaming';
+                document.getElementById('livePillDot').classList.add('pulsing');
+                isStreaming = true;
+                startFPS();
+                startDetectionSim();
+                activatePipeline();
+            } catch (err) {
+                document.getElementById('cameraPlaceholder').innerHTML = `
+                <div class="cam-icon-container">
+                    <span class="material-symbols-outlined cam-icon" style="color:var(--red)">videocam_off</span>
+                    <p>Camera permission denied</p>
+                    <p style="font-size:12px;opacity:0.45;margin-top:6px">Using demo mode with simulated detection</p>
+                </div>`;
+                isStreaming = true;
+                document.getElementById('liveBadge').classList.add('pulsing');
+                document.getElementById('liveStatusPill').classList.add('active');
+                document.getElementById('liveStatusText').textContent = 'Demo Mode';
+                startFPS();
+                startDetectionSim();
+                activatePipeline();
+            }
+        };
+
+        // ── Stop Detection ────────────────────────────────────
+        window.stopDetection = function () {
+            if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+            const video = document.getElementById('videoElement');
+            video.srcObject = null;
+            video.classList.add('hidden');
+            document.getElementById('cameraPlaceholder').innerHTML = `
+        <div class="cam-icon-container">
+          <span class="material-symbols-outlined cam-icon">videocam_off</span>
+          <p>Press START to activate camera</p>
+          <p style="font-size:12px;opacity:0.45;margin-top:6px">YOLOv8 will detect faces · CNN will classify emotions</p>
+        </div>`;
+            document.getElementById('cameraPlaceholder').classList.remove('hidden');
+            document.getElementById('detectionOverlay').classList.add('hidden');
+            document.getElementById('camIcon').textContent = 'videocam_off';
+            document.getElementById('camToggleBtn').style.background = '';
+            document.getElementById('camToggleBtn').style.borderColor = '';
+            document.getElementById('liveBadge').classList.remove('pulsing');
+            document.getElementById('screenshotBtn').disabled = true;
+            document.getElementById('liveStatusPill').classList.remove('active');
+            document.getElementById('liveStatusText').textContent = 'Camera Off';
+            document.getElementById('livePillDot').classList.remove('pulsing');
+            document.getElementById('fpsVal').textContent = '—';
+            clearInterval(detectionInterval);
+            clearInterval(fpsInterval);
+            isStreaming = false;
+            deactivatePipeline();
+        };
+
+        function startFPS() {
+            fpsInterval = setInterval(() => {
+                document.getElementById('fpsVal').textContent = (27 + Math.random() * 3).toFixed(1);
+            }, 1000);
+        }
+
+        function startDetectionSim() {
+            detectionInterval = setInterval(() => {
+                const e = emotions[Math.floor(Math.random() * emotions.length)];
+                const conf = Math.floor(e.conf[0] + Math.random() * (e.conf[1] - e.conf[0]));
+                const threshold = parseInt(document.getElementById('confSlider').value);
+                if (conf < threshold) return;
+
+                document.getElementById('detEmotionText').textContent = `${e.name}: ${conf}%`;
+
+                emotionTotals[e.name]++;
+                totalCount++;
+                updateSessionBars();
+
+                // Log to Firebase Firestore
+                if (document.getElementById('loggingToggle').checked) {
+                    addEmotionLog({ emotion: e.name, confidence: conf, source: 'Live' })
+                        .catch(err => console.warn('Firestore log error:', err));
+                }
+
+                addRecentItem(e, conf);
+            }, 2200);
+        }
+
+        function updateSessionBars() {
+            const keys = ['Happy', 'Neutral', 'Sad', 'Surprise', 'Anger'];
+            keys.forEach(k => {
+                const pct = totalCount ? Math.round((emotionTotals[k] / totalCount) * 100) : 0;
+                const id = k.toLowerCase();
+                document.getElementById(id + 'Pct').textContent = pct + '%';
+                document.getElementById(id + 'Bar').style.width = pct + '%';
+            });
+        }
+
+        function addRecentItem(e, conf) {
+            const now = new Date();
+            const time = now.toTimeString().slice(0, 8);
+            const list = document.getElementById('recentList');
+            const item = document.createElement('div');
+            item.className = 'recent-item new-item';
+            item.innerHTML = `
+        <div class="recent-icon">${e.emoji}</div>
+        <div class="recent-info">
+          <span class="recent-emotion">${e.name}</span>
+          <span class="recent-conf">CONFIDENCE: ${conf}%</span>
+        </div>
+        <span class="recent-time">${time}</span>`;
+            if (list.querySelector('p')) list.innerHTML = '';
+            list.prepend(item);
+            if (list.children.length > 6) list.removeChild(list.lastChild);
+            setTimeout(() => item.classList.remove('new-item'), 40);
+        }
+
+        window.takeScreenshot = function () {
+            const btn = document.getElementById('screenshotBtn');
+            btn.style.background = 'rgba(25,120,229,0.8)';
+            setTimeout(() => btn.style.background = '', 500);
+            alert('Screenshot captured (demo)');
+        };
+
+        window.updateThreshold = function (val) {
+            document.getElementById('thresholdVal').textContent = val + '%';
+        };
+
+        window.startDetection = function () {
+            if (!isStreaming) toggleCamera();
+        };
+
+        // ── Pipeline indicator ────────────────────────────────
+        let pipelineStep = 0;
+        let pipelineTimer = null;
+
+        function activatePipeline() {
+            const steps = document.querySelectorAll('.pipeline-step');
+            steps.forEach(s => s.classList.remove('active', 'done'));
+            pipelineStep = 0;
+            pipelineTimer = setInterval(() => {
+                if (!isStreaming) { clearInterval(pipelineTimer); return; }
+                steps.forEach((s, i) => {
+                    s.classList.remove('active', 'done');
+                    if (i < pipelineStep) s.classList.add('done');
+                    if (i === pipelineStep) s.classList.add('active');
+                });
+                pipelineStep = (pipelineStep + 1) % steps.length;
+            }, 600);
+        }
+
+        function deactivatePipeline() {
+            clearInterval(pipelineTimer);
+            document.querySelectorAll('.pipeline-step').forEach(s => s.classList.remove('active', 'done'));
+        }
+    </script>
+</body>
+
+</html>

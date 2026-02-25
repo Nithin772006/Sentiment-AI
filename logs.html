@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emotion Logs | Sentiment AI</title>
+    <meta name="description" content="View, filter, and export your full emotion detection history." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles/main.css" />
+</head>
+
+<body class="app-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <span class="material-symbols-outlined">sentiment_very_satisfied</span>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">Sentiment AI</span>
+                <span class="brand-version">v1.0.0</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item" id="nav-home">
+                <span class="material-symbols-outlined">home</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="live_detection.html" class="nav-item" id="nav-live">
+                <span class="material-symbols-outlined">videocam</span>
+                <span>Live Detection</span>
+            </a>
+            <a href="upload.html" class="nav-item" id="nav-upload">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Upload Image</span>
+            </a>
+            <a href="logs.html" class="nav-item active" id="nav-logs">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span>Logs</span>
+            </a>
+            <a href="analytics.html" class="nav-item" id="nav-analytics">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <span>Analytics</span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-user-card">
+                <div class="user-avatar-sm" id="sidebarAvatar">U</div>
+                <div>
+                    <span class="user-name-sm" id="sidebarName">User</span>
+                    <span class="user-role-sm" id="sidebarEmail">user@email.com</span>
+                </div>
+            </div>
+            <a href="index.html" class="nav-item logout" onclick="handleLogout()">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <header class="topbar">
+            <h2 class="page-title">
+                <span class="material-symbols-outlined"
+                    style="font-size:20px;vertical-align:middle;color:var(--primary)">receipt_long</span>
+                Emotion Logs
+            </h2>
+            <div class="topbar-right">
+                <button class="btn-export" id="exportBtn" onclick="exportCSV()">
+                    <span class="material-symbols-outlined">file_download</span>
+                    Export CSV
+                </button>
+                <div class="user-pill">
+                    <div class="user-avatar" id="topbarAvatar">U</div>
+                    <span id="topbarName">User</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-body">
+
+            <!-- Filter Row -->
+            <div class="logs-filter-row">
+                <div class="filter-group">
+                    <span class="material-symbols-outlined filter-icon">filter_list</span>
+                    <select class="log-filter-select" id="filterEmotion" onchange="applyFilters()">
+                        <option value="">All Emotions</option>
+                        <option value="Happy">Happy</option>
+                        <option value="Neutral">Neutral</option>
+                        <option value="Sad">Sad</option>
+                        <option value="Surprise">Surprise</option>
+                        <option value="Anger">Anger</option>
+                        <option value="Fear">Fear</option>
+                        <option value="Disgust">Disgust</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="material-symbols-outlined filter-icon">source</span>
+                    <select class="log-filter-select" id="filterSource" onchange="applyFilters()">
+                        <option value="">All Sources</option>
+                        <option value="Live">Live Detection</option>
+                        <option value="Image">Image Upload</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <span class="material-symbols-outlined filter-icon">calendar_today</span>
+                    <input type="date" class="log-filter-select" id="filterDate" onchange="applyFilters()" />
+                </div>
+                <button class="btn-clear-filters" onclick="clearFilters()">
+                    <span class="material-symbols-outlined">close</span>
+                    Clear Filters
+                </button>
+                <div class="logs-count-badge">
+                    <span id="logsCount">0</span> entries
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="logs-table-card">
+                <div class="logs-table-wrap">
+                    <table class="logs-table" id="logsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Emotion</th>
+                                <th>Confidence</th>
+                                <th>Source</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+
+                    <!-- Empty state -->
+                    <div class="logs-empty hidden" id="logsEmpty">
+                        <span class="material-symbols-outlined"
+                            style="font-size:48px;color:var(--text-muted)">receipt_long</span>
+                        <p>No logs found</p>
+                        <p style="font-size:13px;margin-top:4px">Use Live Detection or Upload an image to generate logs
+                        </p>
+                        <div style="display:flex;gap:10px;margin-top:16px;justify-content:center">
+                            <a href="live_detection.html" class="btn-primary"
+                                style="padding:10px 20px;font-size:13px;text-decoration:none;border-radius:8px">
+                                Start Live Detection
+                            </a>
+                            <a href="upload.html" class="btn-export"
+                                style="padding:10px 20px;font-size:13px;text-decoration:none;border-radius:8px">
+                                Upload Image
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /page-body -->
+    </main>
+
+    <script type="module">
+        import { requireAuth, logoutUser, populateUserUI, getEmotionLogs } from './js/firebase-config.js';
+
+        // ── Firebase Auth guard ──────────────────────────────
+        const user = await requireAuth();
+        populateUserUI(user);
+        window.handleLogout = function () { logoutUser(); };
+
+        const emotionEmoji = { Happy: '😊', Neutral: '😐', Sad: '😢', Surprise: '😲', Anger: '😠', Fear: '😨', Disgust: '🤢' };
+        const emotionColor = {
+            Happy: '#22c55e', Neutral: '#8898b4', Sad: '#1978e5',
+            Surprise: '#f97316', Anger: '#ef4444', Fear: '#7f13ec', Disgust: '#eab308'
+        };
+
+        // ── Load logs from Firestore ──────────────────────────
+        let allLogs = [];
+        let filteredLogs = [];
+
+        try {
+            allLogs = await getEmotionLogs(500);
+        } catch (e) {
+            console.warn('Failed to load Firestore logs:', e);
+        }
+
+        filteredLogs = [...allLogs];
+
+        function renderTable(data) {
+            const tbody = document.getElementById('logsBody');
+            const empty = document.getElementById('logsEmpty');
+            const table = document.getElementById('logsTable');
+
+            if (!data || data.length === 0) {
+                table.style.display = 'none';
+                empty.classList.remove('hidden');
+                document.getElementById('logsCount').textContent = '0';
+                return;
+            }
+
+            table.style.display = '';
+            empty.classList.add('hidden');
+            document.getElementById('logsCount').textContent = data.length;
+
+            tbody.innerHTML = data.map((log, i) => {
+                const color = emotionColor[log.emotion] || '#8898b4';
+                const emoji = emotionEmoji[log.emotion] || '🔍';
+                const confColor = log.confidence >= 85 ? '#22c55e'
+                    : log.confidence >= 70 ? '#f97316'
+                        : '#ef4444';
+                const srcBadge = log.source === 'Live'
+                    ? `<span class="log-src-badge live">● Live</span>`
+                    : `<span class="log-src-badge image">▲ Image</span>`;
+                return `
+          <tr class="log-row">
+            <td class="log-num">${i + 1}</td>
+            <td class="log-date">${log.date}</td>
+            <td class="log-time">${log.time}</td>
+            <td class="log-emotion">
+              <span class="log-emoji">${emoji}</span>
+              <span style="color:${color};font-weight:700">${log.emotion}</span>
+            </td>
+            <td class="log-conf">
+              <span class="log-conf-badge" style="color:${confColor};border-color:${confColor}20;background:${confColor}12">
+                ${log.confidence}%
+              </span>
+            </td>
+            <td>${srcBadge}</td>
+            <td class="log-user">${log.user}</td>
+          </tr>`;
+            }).join('');
+        }
+
+        window.applyFilters = function () {
+            const emo = document.getElementById('filterEmotion').value;
+            const src = document.getElementById('filterSource').value;
+            const date = document.getElementById('filterDate').value;
+
+            filteredLogs = allLogs.filter(log => {
+                const matchEmo = !emo || log.emotion === emo;
+                const matchSrc = !src || log.source === src;
+                const matchDate = !date || log.date === new Date(date).toLocaleDateString('en-IN');
+                return matchEmo && matchSrc && matchDate;
+            });
+            renderTable(filteredLogs);
+        };
+
+        window.clearFilters = function () {
+            document.getElementById('filterEmotion').value = '';
+            document.getElementById('filterSource').value = '';
+            document.getElementById('filterDate').value = '';
+            filteredLogs = [...allLogs];
+            renderTable(filteredLogs);
+        };
+
+        window.exportCSV = function () {
+            const data = filteredLogs.length ? filteredLogs : allLogs;
+            if (!data.length) { alert('No logs to export.'); return; }
+            const header = ['#', 'Date', 'Time', 'Emotion', 'Confidence', 'Source', 'User'];
+            const rows = data.map((l, i) =>
+                [i + 1, l.date, l.time, l.emotion, l.confidence + '%', l.source, l.user].join(','));
+            const csv = [header.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `emotion_logs_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        // Initial render
+        renderTable(allLogs);
+    </script>
+</body>
+
+</html>

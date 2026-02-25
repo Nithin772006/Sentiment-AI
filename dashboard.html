@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Sentiment AI</title>
+    <meta name="description"
+        content="Sentiment AI Dashboard – System status, recent emotion summary, and quick actions." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="styles/main.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="app-body">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">
+                <span class="material-symbols-outlined">sentiment_very_satisfied</span>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">Sentiment AI</span>
+                <span class="brand-version">v1.0.0</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-item active" id="nav-home">
+                <span class="material-symbols-outlined">home</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="live_detection.html" class="nav-item" id="nav-live">
+                <span class="material-symbols-outlined">videocam</span>
+                <span>Live Detection</span>
+            </a>
+            <a href="upload.html" class="nav-item" id="nav-upload">
+                <span class="material-symbols-outlined">upload_file</span>
+                <span>Upload Image</span>
+            </a>
+            <a href="logs.html" class="nav-item" id="nav-logs">
+                <span class="material-symbols-outlined">receipt_long</span>
+                <span>Logs</span>
+            </a>
+            <a href="analytics.html" class="nav-item" id="nav-analytics">
+                <span class="material-symbols-outlined">bar_chart</span>
+                <span>Analytics</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-user-card">
+                <div class="user-avatar-sm" id="sidebarAvatar">U</div>
+                <div>
+                    <span class="user-name-sm" id="sidebarName">User</span>
+                    <span class="user-role-sm" id="sidebarEmail">user@email.com</span>
+                </div>
+            </div>
+            <a href="index.html" class="nav-item logout" id="nav-logout" onclick="handleLogout()">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <header class="topbar">
+            <h2 class="page-title">Dashboard</h2>
+            <div class="topbar-right">
+                <div class="topbar-datetime">
+                    <span class="material-symbols-outlined"
+                        style="font-size:16px;color:var(--text-muted)">schedule</span>
+                    <span id="topbarTime" style="font-size:13px;color:var(--text-sub)"></span>
+                </div>
+                <div class="user-pill">
+                    <div class="user-avatar" id="topbarAvatar">U</div>
+                    <span id="topbarName">User</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Body -->
+        <div class="page-body">
+
+            <!-- Welcome + System Status -->
+            <div class="welcome-row">
+                <div>
+                    <h1 class="welcome-title">Welcome back, <span id="welcomeName">User</span> 👋</h1>
+                    <p style="font-size:13px;color:var(--text-sub);margin-top:4px">Real-time facial emotion detection
+                        powered by YOLOv8 + CNN</p>
+                </div>
+                <button class="btn-refresh" id="refreshBtn" onclick="refreshSystemStatus()">
+                    <span class="material-symbols-outlined" id="refreshIcon">refresh</span>
+                    Refresh Status
+                </button>
+            </div>
+
+            <!-- System Status Cards -->
+            <div class="system-status-row">
+                <div class="sys-card" id="sysCamCard">
+                    <div class="sys-card-icon" style="background:rgba(34,197,94,0.12)">
+                        <span class="material-symbols-outlined" style="color:var(--green)">videocam</span>
+                    </div>
+                    <div class="sys-card-info">
+                        <span class="sys-card-label">Camera</span>
+                        <span class="sys-card-status green" id="camStatus">Available</span>
+                    </div>
+                    <span class="status-dot green" id="camDot"></span>
+                </div>
+                <div class="sys-card" id="sysYoloCard">
+                    <div class="sys-card-icon" style="background:rgba(25,120,229,0.12)">
+                        <span class="material-symbols-outlined"
+                            style="color:var(--primary)">face_retouching_natural</span>
+                    </div>
+                    <div class="sys-card-info">
+                        <span class="sys-card-label">YOLO Model</span>
+                        <span class="sys-card-status blue" id="yoloStatus">Loaded</span>
+                    </div>
+                    <span class="status-dot blue" id="yoloDot"></span>
+                </div>
+                <div class="sys-card" id="sysCnnCard">
+                    <div class="sys-card-icon" style="background:rgba(127,19,236,0.12)">
+                        <span class="material-symbols-outlined" style="color:var(--accent)">psychology</span>
+                    </div>
+                    <div class="sys-card-info">
+                        <span class="sys-card-label">Emotion Classifier</span>
+                        <span class="sys-card-status purple" id="cnnStatus">Ready</span>
+                    </div>
+                    <span class="status-dot purple" id="cnnDot"></span>
+                </div>
+                <div class="sys-card" id="sysDbCard">
+                    <div class="sys-card-icon" style="background:rgba(234,179,8,0.12)">
+                        <span class="material-symbols-outlined" style="color:var(--yellow)">storage</span>
+                    </div>
+                    <div class="sys-card-info">
+                        <span class="sys-card-label">Database</span>
+                        <span class="sys-card-status yellow" id="dbStatus">Connected</span>
+                    </div>
+                    <span class="status-dot yellow" id="dbDot"></span>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p class="stat-label">TOTAL FACES DETECTED</p>
+                    <div class="stat-value-row">
+                        <span class="stat-value" id="totalFaces">1,284</span>
+                        <span class="stat-badge positive">+12%</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">DOMINANT EMOTION</p>
+                    <div class="stat-value-row">
+                        <span class="stat-value emotion-happy">Happy</span>
+                        <span class="stat-emoji">😊</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">AVG. CONFIDENCE</p>
+                    <div class="stat-value-row">
+                        <span class="stat-value">92%</span>
+                        <span class="stat-label-sm stable">High</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-label">SYSTEM FPS</p>
+                    <div class="stat-value-row">
+                        <span class="stat-value" id="sysFPS">30</span>
+                        <span class="stat-label-sm stable">Stable</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts + Quick Actions -->
+            <div class="charts-row">
+                <!-- Emotion Trend Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Recent Emotion Summary</h3>
+                        <select class="time-select" id="timeSelect" onchange="updateChart()">
+                            <option value="24">Last 24 Hours</option>
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                    </div>
+                    <div class="chart-area">
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                    <div class="chart-stats">
+                        <div class="chart-stat">
+                            <span class="cs-label">POSITIVE</span>
+                            <span class="cs-val">64%</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="cs-label">NEUTRAL</span>
+                            <span class="cs-val">22%</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="cs-label">NEGATIVE</span>
+                            <span class="cs-val">14%</span>
+                        </div>
+                        <div class="chart-stat">
+                            <span class="cs-label">SESSIONS</span>
+                            <span class="cs-val">12</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-card">
+                    <h3>Quick Actions</h3>
+                    <div class="actions-list">
+                        <a href="live_detection.html" class="action-item" id="actionLive">
+                            <div class="action-icon blue">
+                                <span class="material-symbols-outlined">videocam</span>
+                            </div>
+                            <div class="action-info">
+                                <span class="action-title">Start Live Detection</span>
+                                <span class="action-sub">Activate webcam feed</span>
+                            </div>
+                            <span class="material-symbols-outlined action-arrow">chevron_right</span>
+                        </a>
+                        <a href="upload.html" class="action-item" id="actionUpload">
+                            <div class="action-icon purple">
+                                <span class="material-symbols-outlined">cloud_upload</span>
+                            </div>
+                            <div class="action-info">
+                                <span class="action-title">Upload Image</span>
+                                <span class="action-sub">Analyze static images</span>
+                            </div>
+                            <span class="material-symbols-outlined action-arrow">chevron_right</span>
+                        </a>
+                        <a href="logs.html" class="action-item" id="actionLogs">
+                            <div class="action-icon" style="background:linear-gradient(135deg,#0f766e,#0d9488)">
+                                <span class="material-symbols-outlined">receipt_long</span>
+                            </div>
+                            <div class="action-info">
+                                <span class="action-title">View Logs</span>
+                                <span class="action-sub">Emotion history table</span>
+                            </div>
+                            <span class="material-symbols-outlined action-arrow">chevron_right</span>
+                        </a>
+                        <a href="analytics.html" class="action-item" id="actionAnalytics">
+                            <div class="action-icon green">
+                                <span class="material-symbols-outlined">bar_chart</span>
+                            </div>
+                            <div class="action-info">
+                                <span class="action-title">View Analytics</span>
+                                <span class="action-sub">Charts &amp; trends</span>
+                            </div>
+                            <span class="material-symbols-outlined action-arrow">chevron_right</span>
+                        </a>
+                    </div>
+
+                    <div class="ai-health">
+                        <span class="ai-health-label">AI ENGINE HEALTH</span>
+                        <div class="health-bar-row">
+                            <div class="health-bar-track">
+                                <div class="health-bar-fill" id="healthBar" style="width:94.2%"></div>
+                            </div>
+                            <span class="health-pct">94.2%</span>
+                        </div>
+                        <span class="health-sub">YOLOv8 · CNN Classifier · Optimal</span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /page-body -->
+    </main>
+
+    <script type="module">
+        import { requireAuth, logoutUser, populateUserUI, getEmotionLogs } from './js/firebase-config.js';
+
+        // ── Firebase Auth guard ──────────────────────────────────
+        const user = await requireAuth();
+        const name = user.email.split('@')[0];
+        document.getElementById('welcomeName').textContent = name;
+        populateUserUI(user);
+
+        window.handleLogout = function () { logoutUser(); };
+
+        // ── Clock ──────────────────────────────────────────────
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('topbarTime').textContent =
+                now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+        }
+        updateClock(); setInterval(updateClock, 30000);
+
+        // ── System Status Refresh ─────────────────────────────
+        window.refreshSystemStatus = function () {
+            const icon = document.getElementById('refreshIcon');
+            icon.style.animation = 'spin 1s linear infinite';
+            setTimeout(() => { icon.style.animation = ''; updateChart(); }, 1200);
+        };
+
+        // ── Load real stats from Firestore ─────────────────────
+        try {
+            const logs = await getEmotionLogs(500);
+            if (logs.length > 0) {
+                document.getElementById('statTotalVal').textContent = logs.length.toLocaleString();
+                // Dominant emotion
+                const counts = {};
+                logs.forEach(l => counts[l.emotion] = (counts[l.emotion] || 0) + 1);
+                const dominant = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+                if (dominant) document.getElementById('statDomEmo').textContent = dominant;
+                // Avg confidence
+                const avg = Math.round(logs.reduce((s, l) => s + l.confidence, 0) / logs.length);
+                document.getElementById('statAvgConf').textContent = avg + '%';
+            }
+        } catch (e) { console.log('No Firestore logs yet:', e); }
+
+        // ── Overview Chart ────────────────────────────────────
+        const ctx = document.getElementById('overviewChart').getContext('2d');
+        const grad = ctx.createLinearGradient(0, 0, 0, 220);
+        grad.addColorStop(0, 'rgba(127,19,236,0.28)');
+        grad.addColorStop(1, 'rgba(127,19,236,0.0)');
+
+        const baseData = [0.3, 0.5, 0.65, 0.45, 0.7, 0.6, 0.8, 0.55, 0.9, 0.75, 0.85, 0.5];
+        const overviewChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: 12 }, (_, i) => `${i * 2}:00`),
+                datasets: [{
+                    label: 'Emotion Activity',
+                    data: baseData,
+                    borderColor: '#7f13ec',
+                    borderWidth: 3,
+                    backgroundColor: grad,
+                    fill: true, tension: 0.5, pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#7f13ec',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: '#1e293b', titleColor: '#94a3b8', bodyColor: '#f1f5f9', borderColor: '#334155', borderWidth: 1 }
+                },
+                scales: { x: { display: false }, y: { display: false, min: 0, max: 1.2 } }
+            }
+        });
+
+        function updateChart() {
+            const newData = baseData.map(v => v * (0.8 + Math.random() * 0.4));
+            overviewChart.data.datasets[0].data = newData;
+            overviewChart.update('active');
+        }
+    </script>
+</body>
+
+</html>
